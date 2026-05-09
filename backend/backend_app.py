@@ -12,7 +12,28 @@ POSTS = [
 
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
-    return jsonify(POSTS)
+    """Get all posts with optional sorting."""
+    # Get query parameters for sorting
+    sort_by = request.args.get('sort', '').lower()
+    direction = request.args.get('direction', 'asc').lower()
+    
+    # Create a copy of POSTS to avoid modifying the original list
+    posts = POSTS.copy()
+    
+    # If sort parameter is provided, validate and apply sorting
+    if sort_by:
+        # Validate sort parameter
+        if sort_by not in ['title', 'content']:
+            return jsonify({"error": "Invalid sort field. Allowed values are: 'title' or 'content'"}), 400
+        
+        # Validate direction parameter
+        if direction not in ['asc', 'desc']:
+            return jsonify({"error": "Invalid sort direction. Allowed values are: 'asc' or 'desc'"}), 400
+        
+        # Sort posts by the specified field
+        posts.sort(key=lambda post: post[sort_by].lower(), reverse=(direction == 'desc'))
+    
+    return jsonify(posts)
 
 
 @app.route('/api/posts', methods=['POST'])

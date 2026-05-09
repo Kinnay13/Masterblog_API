@@ -59,5 +59,53 @@ def delete_post(post_id):
     return jsonify({"message": f"Post with id {post_id} has been deleted successfully."}), 200
 
 
+@app.route('/api/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
+    """Update a blog post by its ID."""
+    # Find the post with the given ID
+    post = next((p for p in POSTS if p['id'] == post_id), None)
+    
+    # If the post doesn't exist, return 404
+    if post is None:
+        return jsonify({"error": f"Post with id {post_id} not found."}), 404
+    
+    # Get the JSON data from the request
+    data = request.get_json()
+    
+    # Update title if provided, otherwise keep the old title
+    if data and 'title' in data:
+        post['title'] = data['title']
+    
+    # Update content if provided, otherwise keep the old content
+    if data and 'content' in data:
+        post['content'] = data['content']
+    
+    # Return the updated post with 200 OK status code
+    return jsonify(post), 200
+
+
+@app.route('/api/posts/search', methods=['GET'])
+def search_posts():
+    """Search for blog posts by title or content."""
+    # Get query parameters from the URL
+    title_query = request.args.get('title', '').lower()
+    content_query = request.args.get('content', '').lower()
+    
+    # Filter posts based on search criteria
+    results = []
+    for post in POSTS:
+        # Check if title query matches (case-insensitive)
+        title_match = title_query in post['title'].lower() if title_query else False
+        # Check if content query matches (case-insensitive)
+        content_match = content_query in post['content'].lower() if content_query else False
+        
+        # Add post to results if either title or content matches
+        if title_match or content_match:
+            results.append(post)
+    
+    # Return the search results
+    return jsonify(results), 200
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002, debug=True)
